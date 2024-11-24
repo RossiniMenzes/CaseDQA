@@ -27,43 +27,43 @@ df['Data Consistente'] = df.apply(validar_datas, axis=1)
 df['Duplicado ID Processo'] = df.duplicated(subset='ID Processo', keep=False)
 df['Duplicado Número Processo'] = df.duplicated(subset='Número do Processo', keep=False)
 
-# 5. Abrangência: Para verificar a distribuição geográfica, preciso de uma coluna da Unidade Federativa (UF). 
-# Não há uma coluna de UF, então assumi que a distribuição será feita com base na Vara
+# 5. Abrangência: Para verificar a distribuição geográfica, utilizamos a coluna 'Vara'
 abrangencia_vara = df['Vara'].value_counts(normalize=True) * 100
 
 # 6. Valor da Causa e Valor da Sentença: Verificar se são valores numéricos e com 2 casas decimais
 df['Valor da Causa'] = df['Valor da Causa'].apply(validar_valores)
 df['Valor da Sentença'] = df['Valor da Sentença'].apply(validar_valores)
 
-# Consolidar os resultados de qualidade de dados
+# Consolidar os resultados de qualidade de dados (exceto preenchimento e abrangência)
 resultados_qualidade = pd.DataFrame({
     'Métrica': [
-        'Preenchimento por coluna',
         'Registros inconsistentes com datas',
         'Duplicatas no ID Processo',
-        'Duplicatas no Número do Processo',
-        'Distribuição de Abrangência por Vara'
+        'Duplicatas no Número do Processo'
     ],
-    'Detalhes': [
-        preenchimento.to_dict(),  # Converte para dicionário
+    'Quantidade': [
         df[~df['Data Consistente']].shape[0],
         df[df['Duplicado ID Processo']].shape[0],
-        df[df['Duplicado Número Processo']].shape[0],
-        abrangencia_vara.to_dict()  # Converte para dicionário
+        df[df['Duplicado Número Processo']].shape[0]
     ]
 })
 
-# 7. Salvar o DataFrame tratado em um novo arquivo CSV
-df.to_csv('CaseDQA_tratada.csv', index=False)
+# Converter preenchimento e abrangência para DataFrames
+preenchimento_df = preenchimento.reset_index()
+preenchimento_df.columns = ['Coluna', 'Percentual Preenchimento']
 
-# Salvar os resultados de qualidade de dados em outro arquivo CSV
-resultados_qualidade.to_csv('Resultados_Qualidade.csv', index=False)
+abrangencia_vara_df = abrangencia_vara.reset_index()
+abrangencia_vara_df.columns = ['Vara', 'Percentual Abrangência']
 
-# Exibir resultados de qualidade de dados
+# Salvar os arquivos CSV
+df.to_csv('CaseDQA_tratada.csv', index=False)                  # Dados tratados
+preenchimento_df.to_csv('Preenchimento_Colunas.csv', index=False)  # Preenchimento por coluna
+abrangencia_vara_df.to_csv('Abrangencia_Vara.csv', index=False)    # Abrangência por vara
+resultados_qualidade.to_csv('Resultados_Qualidade.csv', index=False)  # Outras métricas de qualidade
+
+# Exibir resultados no console
 print(f'Preenchimento por coluna: \n{preenchimento}')
 print(f'Número de registros inconsistentes com datas: {df[~df["Data Consistente"]].shape[0]}')
 print(f'Número de duplicatas encontradas no ID Processo: {df[df["Duplicado ID Processo"]].shape[0]}')
 print(f'Número de duplicatas encontradas no Número do Processo: {df[df["Duplicado Número Processo"]].shape[0]}')
-
-# Exibir a distribuição de abrangência por Vara
 print(f'\nDistribuição de Abrangência por Vara: \n{abrangencia_vara}')

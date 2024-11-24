@@ -35,8 +35,29 @@ abrangencia_vara = df['Vara'].value_counts(normalize=True) * 100
 df['Valor da Causa'] = df['Valor da Causa'].apply(validar_valores)
 df['Valor da Sentença'] = df['Valor da Sentença'].apply(validar_valores)
 
+# Consolidar os resultados de qualidade de dados
+resultados_qualidade = pd.DataFrame({
+    'Métrica': [
+        'Preenchimento por coluna',
+        'Registros inconsistentes com datas',
+        'Duplicatas no ID Processo',
+        'Duplicatas no Número do Processo',
+        'Distribuição de Abrangência por Vara'
+    ],
+    'Detalhes': [
+        preenchimento.to_dict(),  # Converte para dicionário
+        df[~df['Data Consistente']].shape[0],
+        df[df['Duplicado ID Processo']].shape[0],
+        df[df['Duplicado Número Processo']].shape[0],
+        abrangencia_vara.to_dict()  # Converte para dicionário
+    ]
+})
+
 # 7. Salvar o DataFrame tratado em um novo arquivo CSV
 df.to_csv('CaseDQA_tratada.csv', index=False)
+
+# Salvar os resultados de qualidade de dados em outro arquivo CSV
+resultados_qualidade.to_csv('Resultados_Qualidade.csv', index=False)
 
 # Exibir resultados de qualidade de dados
 print(f'Preenchimento por coluna: \n{preenchimento}')

@@ -1,6 +1,7 @@
 import pandas as pd
 import re
 import numpy as np
+from decimal import Decimal, InvalidOperation
 
 # Função para validar e padronizar os nomes
 def padronizar_nome(nome):
@@ -17,13 +18,15 @@ def validar_datas(row):
         return False
     return True
 
-# Função para verificar se os valores são numéricos e possuem 2 casas decimais
+# Função para verificar se os valores são numéricos e corrigir para 2 casas decimais
 def validar_valores(value):
     try:
-        value = float(value)
-        return round(value, 2) == value
-    except:
-        return False
+        if pd.isna(value) or value == '':
+            return Decimal('0.00')  # Retorna 0.00 caso o valor seja vazio ou inválido
+        value = Decimal(value).quantize(Decimal('0.00'))  # Converte para Decimal com duas casas
+        return value
+    except InvalidOperation:
+        return Decimal('0.00')  # Retorna 0.00 se o valor não for numérico
 
 # Função para padronizar tipo de ação
 def padronizar_tipo_acao(tipo_acao):
